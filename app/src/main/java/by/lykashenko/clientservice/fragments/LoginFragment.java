@@ -1,7 +1,10 @@
 package by.lykashenko.clientservice.fragments;
 
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
@@ -24,7 +27,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import by.lykashenko.clientservice.BD.Authorisation;
+import by.lykashenko.clientservice.BD.Clients;
+import by.lykashenko.clientservice.MainActivity;
 import by.lykashenko.clientservice.R;
+import by.lykashenko.clientservice.Recievers.AlarmCardReciever;
 
 
 public class LoginFragment extends Fragment {
@@ -43,7 +49,7 @@ public class LoginFragment extends Fragment {
     public static final String ID_USER_TAG = "id";
     public static final String PREFERENCES_NAME= "login_check";
     public static final String STATE_LOGIN = "login_state";
-    private Integer state;
+    private Integer state, boot_state;
     private Integer save_preferences = 0;
 
 
@@ -61,6 +67,8 @@ public class LoginFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
         state = getArguments().getInt("state");
+        boot_state = getArguments().getInt("boot");
+        Log.d(LOG_TAG, "запуск после загрузки");
         //инициализация элементов
         input_login_layout = (TextInputLayout) view.findViewById(R.id.input_layout_login);
         input_passwords_layout = (TextInputLayout) view.findViewById(R.id.input_layout_passwords);
@@ -147,6 +155,7 @@ public class LoginFragment extends Fragment {
         });
 
 
+
         return view;
     }
 
@@ -177,6 +186,32 @@ public class LoginFragment extends Fragment {
                 LoginPressButtonListener loginPressButtonListener = (LoginPressButtonListener) getActivity();
                 loginPressButtonListener.onLoginPressButton(2);
             }
+        }
+        if (boot_state == 1){
+            List<Clients> list = new Select().from(Clients.class).where("user_id = ?", "1").execute();
+            AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
+            Intent intent = new Intent(getActivity(), AlarmCardReciever.class);
+            Integer i =0;
+            while (i<= (list.size()-1)) {
+                String fio_client = list.get(i).client.toString();
+                String phone_client = list.get(i).phone.toString();
+                String id_client = list.get(i).getId().toString();
+                Long alarmset_client = list.get(i).alarmset;
+                if (alarmset_client<=System.currentTimeMillis()){
+                    alarmset_client = System.currentTimeMillis();
+                }
+                intent.putExtra(AddClientFragment.CLIENT_FIO, fio_client);
+                intent.putExtra(AddClientFragment.CLIENT_PHONE, phone_client);
+                intent.putExtra(AddClientFragment.CLIENT_ID, id_client);
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), Integer.parseInt(id_client), intent, PendingIntent.FLAG_CANCEL_CURRENT);
+                alarmManager.cancel(pendingIntent);
+
+                alarmManager.set(AlarmManager.RTC_WAKEUP, alarmset_client, pendingIntent);
+
+                Log.d(LOG_TAG, "Напоминание для "+fio_client+" пересоздано");
+                i=i+1;
+            }
+
         }
     }
 

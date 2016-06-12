@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Dia
     private CoordinatorLayout coordinatorLayout;
     private Integer STATE_ADD_USER = 0;
     private String phoneNumber;
+    public Integer BOOT_STATE = 0;
     private Integer state;
 
     @Override
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Dia
         }
         Intent intent = getIntent();
         phoneNumber = intent.getStringExtra("phoneNumber");
+        BOOT_STATE = intent.getIntExtra("boot", 0);
         Log.d(LOG_TAG, "number main = "+phoneNumber);
         state = intent.getIntExtra("addclient", 0);
         sharedPreferences = getSharedPreferences(LoginFragment.PREFERENCES_NAME, Context.MODE_PRIVATE);
@@ -109,9 +111,11 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Dia
         ftrans.add(R.id.frameLayout, loginFragment, "fragment_login");
         Bundle bundle = new Bundle();
         bundle.putInt("state", STATE_ADD_USER);
+        bundle.putInt("boot", BOOT_STATE);
         loginFragment.setArguments(bundle);
         ftrans.commit();
         Log.d(LOG_TAG, "start login_fragment");
+//        BOOT_STATE = 0;
     }
 
     @Override
