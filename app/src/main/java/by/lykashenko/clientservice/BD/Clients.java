@@ -29,17 +29,21 @@ public class Clients extends Model {
     @Column(name = "alarmset")
     public Long alarmset;
 
+    @Column(name= "state")
+    public Integer state;
+
     public Clients(){
         super();
     }
 
-    public Clients(String user_id,String client, String phone, Long timeset, String note, Long alarmset){
+    public Clients(String user_id,String client, String phone, Long timeset, String note, Long alarmset, Integer state){
         this.user_id=user_id;
         this.client=client;
         this.phone=phone;
         this.timeset=timeset;
         this.note=note;
         this.alarmset=alarmset;
+        this.state=state;
     }
 
 }

@@ -29,4 +29,35 @@
     <string name="true_chk_login">Автоматический вход включён</string>
     <string name="false_chk_login">Автоматический вход выключен</string>
     <string name="spisok_client">Список клиентов</string>
+    <string name="callended">Последний звонок в</string>
+    <string name="editClient">Редактировать данные о клиенте</string>
+    <string name="deleteClient">Удалить данные о клиенте</string>
+    <string name="titleUpdateClient">Выберите действие с данными о клиенте</string>
+    <string name="closeClient">Отложить напоминания</string>
+    <string name="exitClient">Отменить напоминания</string>
+    <string name="one">1 мин</string>
+    <string name="five">5 мин</string>
+    <string name="ten">10 мин</string>
+    <string name="set_alarm">Устанвоить дату и время</string>
+    <string name="fio_edit_client">ФИО клиента</string>
+    <string name="phone_edit_client">Номер телефона клиента</string>
+    <string name="time_date_edit_client">Время и дата напоминания</string>
+    <string name="note_edit_client">Комментарий</string>
+
+    <string-array name="checkListClient">
+        <item>Весь список</item>
+        <item>Не просроченные</item>
+        <item>Отменённые</item>
+        <item>Просроченные</item>
+    </string-array>
+
+    <string-array name="timeAlarmSet">
+        <item>1 мин</item>
+        <item>5 мин</item>
+        <item>10 мин</item>
+        <item>30 мин</item>
+        <item>1 час</item>
+        <item>Своё время</item>
+
+    </string-array>
 </resources>

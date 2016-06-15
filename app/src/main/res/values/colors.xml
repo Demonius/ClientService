@@ -6,6 +6,7 @@
     <color name="colorTextRegister">#1a30ac</color>
     <color name="background">#4850a9</color>
     <color name="colorTitle">#000000</color>
-    <color name="backgroundRed">#ff0000</color>
-    <color name="backgroundYellow">#ffff00</color>
+    <color name="backgroundRed">#ff5a5a</color>
+    <color name="backgroundYellow">#ffff50</color>
+    <color name="backgroundGreen">#46ff46</color>
 </resources>

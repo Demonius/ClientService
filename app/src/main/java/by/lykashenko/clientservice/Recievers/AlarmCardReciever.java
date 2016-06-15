@@ -7,14 +7,12 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
-import android.provider.Settings;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import by.lykashenko.clientservice.MainActivity;
 import by.lykashenko.clientservice.R;
-import by.lykashenko.clientservice.fragments.AddClientFragment;
+import by.lykashenko.clientservice.Fragments.AddClientFragment;
 
 public class AlarmCardReciever extends BroadcastReceiver {
 
@@ -50,7 +48,6 @@ public class AlarmCardReciever extends BroadcastReceiver {
                 .setContentText(phonenumber)
                 .addAction(0,"Отменить",null)
                 .addAction(0,"Отложить",null)
-                .addAction(0,"Перезвонить",null)
                 .setAutoCancel(true).getNotification();
 
         notificationManager.notify(Integer.parseInt(id), notification);

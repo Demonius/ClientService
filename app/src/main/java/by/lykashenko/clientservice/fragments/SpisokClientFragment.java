@@ -1,4 +1,4 @@
-package by.lykashenko.clientservice.fragments;
+package by.lykashenko.clientservice.Fragments;
 
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
@@ -6,16 +6,21 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.activeandroid.ActiveAndroid;
-import com.activeandroid.query.Delete;
 import com.activeandroid.query.Select;
 
 import java.text.SimpleDateFormat;
@@ -30,21 +35,53 @@ import by.lykashenko.clientservice.R;
  */
 public class SpisokClientFragment extends Fragment {
 
+    public interface DialogPopupClientListener {
+        void onDialogPopupClient(Integer state, Long id);
+    }
+
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private CoordinatorLayout coordinatorLayout;
-    private List<Clients> getAllClient;
+    private List<Clients> getAllClient = null;
     private String LOG_TAG = "fragmentspisok";
     private Toolbar toolbar;
+    private Spinner spinnerSpisok;
+    private Integer startFragment;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_spisok, container, false);
+        startFragment = 1;
 
+//        toolbar.setTitle(getResources().getString(R.string.spisok_client));
         toolbar = (Toolbar) view.findViewById(R.id.toolbarspisok);
-        toolbar.setTitle(getResources().getString(R.string.spisok_client));
+        spinnerSpisok = (Spinner) view.findViewById(R.id.spinner_nav);
+
+        String[] list = getResources().getStringArray(R.array.checkListClient);
+        ArrayAdapter<String> adapterSpinner = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, list);
+        adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSpisok.setAdapter(adapterSpinner);
+        spinnerSpisok.setSelection(0);
+
+        spinnerSpisok.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                getAllClient.clear();
+                getAllClient.addAll(GetAllClient(position));
+                if (startFragment != 1) {
+                    mAdapter.notifyDataSetChanged();
+                } else {
+                    startFragment = 0;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
 
         coordinatorLayout = (CoordinatorLayout) view.findViewById(R.id.coordinatorLayoutSpisok);
 
@@ -54,10 +91,11 @@ public class SpisokClientFragment extends Fragment {
         mRecyclerView.setLayoutManager(mLayoutManager);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
         mRecyclerView.setItemAnimator(itemAnimator);
-        getAllClient = GetAllClient();
-        if (getAllClient.isEmpty()){
+        getAllClient = GetAllClient(0);
+        if (getAllClient.isEmpty()) {
             coordinatorLayout.setBackgroundDrawable(getResources().getDrawable(R.drawable.no_client));
         } else {
+
             mAdapter = new MyAdapter(getAllClient);
             mRecyclerView.setAdapter(mAdapter);
 
@@ -71,7 +109,7 @@ public class SpisokClientFragment extends Fragment {
         private List<Clients> m_list_client;
 
         public MyAdapter(List<Clients> getAllClient) {
-            m_list_client=getAllClient;
+            m_list_client = getAllClient;
         }
 
         public class PersonViewHolder extends RecyclerView.ViewHolder {
@@ -80,22 +118,55 @@ public class SpisokClientFragment extends Fragment {
 
             public CardView cv;
 
-            public PersonViewHolder (final View item_view){
+            public PersonViewHolder(final View item_view) {
                 super(item_view);
-                nameClient = (TextView)item_view.findViewById(R.id.textNameClient);
-                phoneClient = (TextView)item_view.findViewById((R.id.textPhoneNumber));
+                nameClient = (TextView) item_view.findViewById(R.id.textNameClient);
+                phoneClient = (TextView) item_view.findViewById((R.id.textPhoneNumber));
                 timeCall = (TextView) item_view.findViewById(R.id.timeCall);
-                dateCall = (TextView) item_view.findViewById(R.id.dateCall);
                 alarmCall = (TextView) item_view.findViewById(R.id.alarmCall);
                 cv = (CardView) item_view.findViewById(R.id.card_view_clients);
 
-                item_view.setOnClickListener(new View.OnClickListener(){
+
+                item_view.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        final Integer position_click = getAdapterPosition();
+                        PopupMenu popupMenu = new PopupMenu(getActivity(), v);
+                        popupMenu.inflate(R.menu.popup_menu_spisok);
+                        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                            @Override
+                            public boolean onMenuItemClick(MenuItem item) {
+                                Long id_client = m_list_client.get(position_click).getId();
+                                DialogPopupClientListener dialogPopupClientListener = (DialogPopupClientListener) getActivity();
+                                switch (item.getItemId()){
+                                    case R.id.item_delete_client:
+
+                                        dialogPopupClientListener.onDialogPopupClient(2, id_client);
+                                        getAllClient.clear();
+                                        getAllClient.addAll(GetAllClient(spinnerSpisok.getSelectedItemPosition()));
+                                        mAdapter.notifyDataSetChanged();
+                                        break;
+                                    case R.id.item_edit_client:
+
+                                        dialogPopupClientListener.onDialogPopupClient(1, id_client);
+                                        getAllClient.clear();
+                                        getAllClient.addAll(GetAllClient(spinnerSpisok.getSelectedItemPosition()));
+                                        mAdapter.notifyDataSetChanged();
+                                        break;
+                                }
+                                return false;
+                            }
+                        });
+                        popupMenu.show();
+                        return false;
+                    }
+                });
+                item_view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        Integer position_click = getAdapterPosition();
+                        final Integer position_click = getAdapterPosition();
 
-
-                        Log.d("manager", "position click = "+Integer.toString(position_click));
+                        Log.d("manager", "position click = " + Integer.toString(position_click));
 
                     }
                 });
@@ -117,27 +188,29 @@ public class SpisokClientFragment extends Fragment {
 
             Long timeDate = m_list_client.get(position).timeset;
             Date date = new Date(timeDate);
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
-            final String time_output = timeFormat.format(date);
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMMM-yyyy");
-            final String date_output = dateFormat.format(date);
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm dd-MMMM-yyyy");
+            StringBuilder builder = new StringBuilder();
+            builder.append(getResources().getString(R.string.callended)).append(" ").append(timeFormat.format(date));
+            final String time_output = builder.toString();
 
             holder.timeCall.setText(time_output);
-            holder.dateCall.setText(date_output);
 
             Long setAlarm = m_list_client.get(position).alarmset;
-            if ((setAlarm-System.currentTimeMillis())<=600000&&(setAlarm-System.currentTimeMillis())>0){
-//                holder.cv.setBackgroundColor(getResources().getColor(R.color.backgroundRed));
+            if ((setAlarm - System.currentTimeMillis()) <= 600000 && (setAlarm - System.currentTimeMillis()) > 0) {
                 holder.cv.setCardBackgroundColor(getResources().getColor(R.color.backgroundRed));
             }
-            if ((setAlarm-System.currentTimeMillis())<1800000&&(setAlarm-System.currentTimeMillis())>600000){
+            if ((setAlarm - System.currentTimeMillis()) < 1800000 && (setAlarm - System.currentTimeMillis()) > 600000) {
                 holder.cv.setCardBackgroundColor(getResources().getColor(R.color.backgroundYellow));
+            } else {
+                if ((setAlarm - System.currentTimeMillis()) > 1800000) {
+                    holder.cv.setCardBackgroundColor(getResources().getColor(R.color.backgroundGreen));
+                }
             }
             Date alarmDate = new Date(setAlarm);
             SimpleDateFormat alarmDateTime = new SimpleDateFormat("HH:mm dd-MMMM-yyyy");
             final String alarm_output = alarmDateTime.format(alarmDate);
 
-            holder.alarmCall.setText("Напомнить в "+alarm_output);
+            holder.alarmCall.setText("Напомнить в " + alarm_output);
 
 
         }
@@ -148,28 +221,43 @@ public class SpisokClientFragment extends Fragment {
         }
     }
 
-    private List<Clients> GetAllClient() {
+    private List<Clients> GetAllClient(Integer position) {
 
-        List<Clients> list = new Select().from(Clients.class).execute();
+        List<Clients> list = null;
+
+        List<Clients> list1 = new Select().from(Clients.class).where("user_id = ? and state < ?", 1, 5).orderBy("alarmset").execute();
 
         Integer i = 0;
-        while (i <= list.size()-1){
+        while (i <= list1.size() - 1) {
             Long currentTime = System.currentTimeMillis();
-                if ((currentTime-list.get(i).alarmset)>300000){
+            if ((currentTime - list1.get(i).alarmset) > 14400000) {
                 ActiveAndroid.beginTransaction();
-                Clients clients = Clients.load(Clients.class, list.get(i).getId());
-                clients.user_id = "10";
+                Clients clients = Clients.load(Clients.class, list1.get(i).getId());
+                clients.state = 10;
                 clients.save();
                 ActiveAndroid.setTransactionSuccessful();
                 ActiveAndroid.endTransaction();
-//                new Delete().from(Clients.class).where("_id = ?", list.get(i).getId()).execute();
             }
-            i=i+1;
+            i = i + 1;
         }
-        list = new Select().from(Clients.class).where("user_id = ?", "1").orderBy("alarmset").execute();
+        switch (position) {
+            case 0:
+                list = new Select().from(Clients.class).where("user_id = ?", 1).orderBy("alarmset").execute();
+                break;
+            case 1:
+                list = new Select().from(Clients.class).where("user_id = ? and state < ?", 1, 5).orderBy("alarmset").execute();
+                break;
+            case 2:
+                list = new Select().from(Clients.class).where("user_id = ? and state = ?", 1, 5).orderBy("alarmset").execute();
+                break;
+            case 3:
+                list = new Select().from(Clients.class).where("user_id = ? and state = ?", 1, 10).orderBy("alarmset").execute();
+                break;
+        }
 
-
+//        mAdapter.notifyDataSetChanged();
 
         return list;
     }
+
 }

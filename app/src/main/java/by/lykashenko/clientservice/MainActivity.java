@@ -14,27 +14,30 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.support.v7.widget.Toolbar;
+import android.view.View;
 import android.widget.Toast;
 
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Configuration;
+import com.activeandroid.query.Delete;
 
-import java.util.concurrent.TimeUnit;
-
+import by.lykashenko.clientservice.BD.AlarmNotification;
 import by.lykashenko.clientservice.BD.Authorisation;
 import by.lykashenko.clientservice.BD.Clients;
 import by.lykashenko.clientservice.Dialog.DialogFragmentRegistration;
-import by.lykashenko.clientservice.fragments.AddClientFragment;
-import by.lykashenko.clientservice.fragments.LoginFragment;
-import by.lykashenko.clientservice.fragments.SpisokClientFragment;
+import by.lykashenko.clientservice.Fragments.AddClientFragment;
+import by.lykashenko.clientservice.Fragments.EditClientFragment;
+import by.lykashenko.clientservice.Fragments.LoginFragment;
+import by.lykashenko.clientservice.Fragments.SpisokClientFragment;
 
 /**
  * Created by Дмитрий on 03.06.16.
  */
 public class MainActivity extends AppCompatActivity implements LoginFragment.DialogAddUserListener, DialogFragmentRegistration.SaveUserListener,
-        LoginFragment.LoginPressButtonListener, AddClientFragment.DialogAddClientListener{
+        LoginFragment.LoginPressButtonListener, AddClientFragment.DialogAddClientListener,
+        SpisokClientFragment.DialogPopupClientListener{
     private static final String LOG_TAG = "MainActivity";
     private SharedPreferences sharedPreferences;
     private CoordinatorLayout coordinatorLayout;
@@ -42,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Dia
     private String phoneNumber;
     public Integer BOOT_STATE = 0;
     private Integer state;
+    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +53,8 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Dia
         setContentView(R.layout.activity_main);
 
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayoutMain);
+
+//        toolbar = (Toolbar) findViewById(R.id.toolbarmain);
 
         //диалог permission
         if (ContextCompat.checkSelfPermission(getApplication(),
@@ -58,18 +64,18 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Dia
                     Manifest.permission.READ_PHONE_STATE)) {
             } else {
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_PHONE_STATE},1);
+                        new String[]{Manifest.permission.READ_PHONE_STATE}, 1);
             }
         }
         Intent intent = getIntent();
         phoneNumber = intent.getStringExtra("phoneNumber");
         BOOT_STATE = intent.getIntExtra("boot", 0);
-        Log.d(LOG_TAG, "number main = "+phoneNumber);
+        Log.d(LOG_TAG, "number main = " + phoneNumber);
         state = intent.getIntExtra("addclient", 0);
         sharedPreferences = getSharedPreferences(LoginFragment.PREFERENCES_NAME, Context.MODE_PRIVATE);
         Integer state_id = sharedPreferences.getInt(LoginFragment.STATE_LOGIN, 0);
-        Log.d(LOG_TAG, "state_id main (login) = "+Integer.toString(state_id));
-        Log.d(LOG_TAG, "state main (add_user) = "+ Integer.toString(state));
+        Log.d(LOG_TAG, "state_id main (login) = " + Integer.toString(state_id));
+        Log.d(LOG_TAG, "state main (add_user) = " + Integer.toString(state));
 
         if (state == 1) {
             if (state_id == 1) {
@@ -81,13 +87,13 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Dia
                 startLoginFragment();
                 STATE_ADD_USER = 1;
             }
-        }else{
+        } else {
             startLoginFragment();
-            STATE_ADD_USER=0;
+            STATE_ADD_USER = 0;
         }
 
         //активация базы данных
-        Configuration dbConfiguration = new Configuration.Builder(this).setDatabaseName("Manager.db").setModelClasses(Authorisation.class, Clients.class).create();
+        Configuration dbConfiguration = new Configuration.Builder(this).setDatabaseName("Manager.db").setModelClasses(Authorisation.class, Clients.class, AlarmNotification.class).create();
         ActiveAndroid.initialize(dbConfiguration);
 
         FragmentManager fm = getSupportFragmentManager();
@@ -120,9 +126,9 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Dia
 
     @Override
     public void onDialogAddUser(Integer state) {
-        if (state == 1){
+        if (state == 1) {
             DialogFragmentRegistration dialogRegistration = new DialogFragmentRegistration();
-            dialogRegistration.show(getSupportFragmentManager(),"Registration");
+            dialogRegistration.show(getSupportFragmentManager(), "Registration");
             Log.d(LOG_TAG, "регистрация");
         }
     }
@@ -130,22 +136,22 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Dia
     @Override
     public void onSaveUser(ContentValues infoClient) {
         ActiveAndroid.beginTransaction();
-        Authorisation autorisation = new Authorisation(infoClient.get("login").toString(),infoClient.get("passwords").toString(),infoClient.getAsInteger("function"));
+        Authorisation autorisation = new Authorisation(infoClient.get("login").toString(), infoClient.get("passwords").toString(), infoClient.getAsInteger("function"));
         autorisation.save();
         ActiveAndroid.setTransactionSuccessful();
         ActiveAndroid.endTransaction();
-        Toast.makeText(this,"Пользователь добавлен", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Пользователь добавлен", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onLoginPressButton(Integer state) {
-        switch (state){
+        switch (state) {
             case 1:
                 Log.d(LOG_TAG, "такой пользователь есть");
                 startSpisokClients();
                 break;
             case 2:
-                Snackbar.make(coordinatorLayout,getResources().getString(R.string.err_user), Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(coordinatorLayout, getResources().getString(R.string.err_user), Snackbar.LENGTH_SHORT).show();
                 break;
             case 3:
                 startAddClient(phoneNumber);
@@ -162,6 +168,19 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Dia
         ftrans.replace(R.id.frameLayout, clientFragment);
         ftrans.commit();
 
+
+    }
+
+    private void startEditClient(Long id_client) {
+        EditClientFragment editFragment = new EditClientFragment();
+        FragmentTransaction ftrans = getSupportFragmentManager().beginTransaction();
+        Bundle bundle = new Bundle();
+        bundle.putLong("id_client", id_client);
+        editFragment.setArguments(bundle);
+        ftrans.replace(R.id.frameLayout, editFragment);
+        ftrans.commit();
+
+
     }
 
     private void startSpisokClients() {
@@ -169,12 +188,33 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Dia
         FragmentTransaction ftrans = getSupportFragmentManager().beginTransaction();
         ftrans.replace(R.id.frameLayout, clientFragment);
         ftrans.commit();
+
+
     }
 
     @Override
     public void onDialogAddClient(Integer state) {
-        if (state == 1){
+        if (state == 1) {
             finish();
+        }
+        SetAlarmNotification setAlarmNotification = new SetAlarmNotification();
+        setAlarmNotification.setAlarmNotification(this, phoneNumber);
+    }
+
+
+    @Override
+    public void onDialogPopupClient(Integer state, Long id) {
+        switch (state){
+            case 1:
+                startEditClient(id);
+                break;
+            case 2:
+                Log.d(LOG_TAG,"Delete from clients where _id = "+Long.toString(id));
+                new Delete().from(Clients.class).where("_id = ?", id).execute();
+                new Delete().from(AlarmNotification.class).where("id_alarm = ?", Long.toString(id)).execute();
+                SetAlarmNotification setAlarmNotification = new SetAlarmNotification();
+                setAlarmNotification.deleteAlarmNotification(this, Long.toString(id));
+                break;
         }
     }
 }
