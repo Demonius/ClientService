@@ -166,6 +166,9 @@ public class AddClientFragment extends Fragment {
 
         }else{
             DialogFragmentUpdate dialogUpdate = new DialogFragmentUpdate();
+            Bundle bundle = new Bundle();
+            bundle.putString("phone", phoneNumber);
+            dialogUpdate.setArguments(bundle);
             dialogUpdate.show(getActivity().getSupportFragmentManager(),"Update");
             Log.d(LOG_TAG, "выбор действий");
         }

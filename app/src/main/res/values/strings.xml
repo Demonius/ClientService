@@ -31,7 +31,7 @@
     <string name="spisok_client">Список клиентов</string>
     <string name="callended">Последний звонок в</string>
     <string name="editClient">Редактировать данные о клиенте</string>
-    <string name="deleteClient">Удалить данные о клиенте</string>
+    <string name="deleteClient">Удалить напоминания</string>
     <string name="titleUpdateClient">Выберите действие с данными о клиенте</string>
     <string name="closeClient">Отложить напоминания</string>
     <string name="exitClient">Отменить напоминания</string>

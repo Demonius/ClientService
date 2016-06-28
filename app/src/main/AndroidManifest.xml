@@ -54,7 +54,10 @@
         <receiver
             android:name=".Recievers.AlarmCardReciever"
             android:enabled="true"
-            android:exported="true"></receiver>
+            android:exported="true" />
+
+        <activity android:name=".AlarmActivity" />
+        <activity android:name=".AlarmCloseActivity"></activity>
     </application>
 
 </manifest>

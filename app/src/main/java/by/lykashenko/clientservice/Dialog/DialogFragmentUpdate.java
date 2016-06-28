@@ -16,7 +16,12 @@ import by.lykashenko.clientservice.R;
  */
 public class DialogFragmentUpdate extends android.support.v4.app.DialogFragment implements View.OnClickListener {
 
+    public interface DialogEditListener {
+        void onDialogEditClient(Integer state, String phoneNumber);
+    }
+
     private final String LOG_TAG = "dialogUpdate";
+    private String phoneNumber;
 
     private TextView editClient, deleteClient;
 
@@ -32,7 +37,7 @@ public class DialogFragmentUpdate extends android.support.v4.app.DialogFragment 
 
         getDialog().setCanceledOnTouchOutside(false);
         View v = inflater.inflate(R.layout.update_client, null);
-
+       phoneNumber= getArguments().getString("phone");
         Toolbar toolbar = (Toolbar) v.findViewById(R.id.toolbarUpdateClient);
         toolbar.setTitle(R.string.titleUpdateClient);
 
@@ -49,12 +54,18 @@ public class DialogFragmentUpdate extends android.support.v4.app.DialogFragment 
 
     @Override
     public void onClick(View v) {
+        DialogEditListener dialogEditListener = (DialogEditListener) getActivity();
         switch(v.getId()){
             case R.id.textViewUpdateClient:
+
+                dialogEditListener.onDialogEditClient(0, phoneNumber);
                 Toast.makeText(getActivity(),"Редактировать данные", Toast.LENGTH_SHORT).show();
+                dismiss();
                 break;
             case R.id.textViewDeleteClient:
+                dialogEditListener.onDialogEditClient(1, phoneNumber);
                 Toast.makeText(getActivity(),"Удалить данные", Toast.LENGTH_SHORT).show();
+                dismiss();
                 break;
         }
     }

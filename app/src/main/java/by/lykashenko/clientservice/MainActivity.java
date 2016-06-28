@@ -16,17 +16,20 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.widget.Toast;
 
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Configuration;
 import com.activeandroid.query.Delete;
+import com.activeandroid.query.Select;
+
+import java.util.List;
 
 import by.lykashenko.clientservice.BD.AlarmNotification;
 import by.lykashenko.clientservice.BD.Authorisation;
 import by.lykashenko.clientservice.BD.Clients;
 import by.lykashenko.clientservice.Dialog.DialogFragmentRegistration;
+import by.lykashenko.clientservice.Dialog.DialogFragmentUpdate;
 import by.lykashenko.clientservice.Fragments.AddClientFragment;
 import by.lykashenko.clientservice.Fragments.EditClientFragment;
 import by.lykashenko.clientservice.Fragments.LoginFragment;
@@ -37,7 +40,8 @@ import by.lykashenko.clientservice.Fragments.SpisokClientFragment;
  */
 public class MainActivity extends AppCompatActivity implements LoginFragment.DialogAddUserListener, DialogFragmentRegistration.SaveUserListener,
         LoginFragment.LoginPressButtonListener, AddClientFragment.DialogAddClientListener,
-        SpisokClientFragment.DialogPopupClientListener{
+        SpisokClientFragment.DialogPopupClientListener, EditClientFragment.CloseEditClientListener,
+        DialogFragmentUpdate.DialogEditListener{
     private static final String LOG_TAG = "MainActivity";
     private SharedPreferences sharedPreferences;
     private CoordinatorLayout coordinatorLayout;
@@ -68,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Dia
             }
         }
         Intent intent = getIntent();
+
         phoneNumber = intent.getStringExtra("phoneNumber");
         BOOT_STATE = intent.getIntExtra("boot", 0);
         Log.d(LOG_TAG, "number main = " + phoneNumber);
@@ -217,4 +222,43 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Dia
                 break;
         }
     }
+
+    @Override
+    public void onCloseEditClient(Integer state) {
+        if (state == 1){
+            startSpisokClients();
+        }
+    }
+
+    @Override
+    public void onDialogEditClient(Integer state, String phoneNumber) {
+
+        List<Clients> list = new Select().from(Clients.class).where("phonenumber = ?", phoneNumber).execute();
+        Long id_client = list.get(0).getId();
+
+
+        if (state == 0){
+            ActiveAndroid.beginTransaction();
+            Clients clients = Clients.load(Clients.class, id_client);
+            clients.timeset = System.currentTimeMillis();
+            clients.state = 2;
+            clients.save();
+            ActiveAndroid.setTransactionSuccessful();
+            ActiveAndroid.endTransaction();
+            startEditClient(list.get(0).getId());
+        }
+
+        if (state == 1){
+            ActiveAndroid.beginTransaction();
+            Clients clients = Clients.load(Clients.class, id_client);
+            clients.alarmset = Long.valueOf(0);
+            clients.save();
+            ActiveAndroid.setTransactionSuccessful();
+            ActiveAndroid.endTransaction();
+            SetAlarmNotification setAlarmNotification = new SetAlarmNotification();
+            setAlarmNotification.deleteAlarmNotification(this, Long.toString(id_client));
+            finish();
+        }
+    }
+
 }

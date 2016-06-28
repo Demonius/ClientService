@@ -1,5 +1,7 @@
 package by.lykashenko.clientservice.Fragments;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.Fragment;
@@ -165,7 +167,9 @@ public class SpisokClientFragment extends Fragment {
                     @Override
                     public void onClick(View view) {
                         final Integer position_click = getAdapterPosition();
-
+                        Intent intent1 = new Intent(Intent.ACTION_DIAL);
+                        intent1.setData(Uri.parse("tel:" + m_list_client.get(position_click).phone.toString()));
+                        startActivity(intent1);
                         Log.d("manager", "position click = " + Integer.toString(position_click));
 
                     }
@@ -196,21 +200,25 @@ public class SpisokClientFragment extends Fragment {
             holder.timeCall.setText(time_output);
 
             Long setAlarm = m_list_client.get(position).alarmset;
-            if ((setAlarm - System.currentTimeMillis()) <= 600000 && (setAlarm - System.currentTimeMillis()) > 0) {
-                holder.cv.setCardBackgroundColor(getResources().getColor(R.color.backgroundRed));
-            }
-            if ((setAlarm - System.currentTimeMillis()) < 1800000 && (setAlarm - System.currentTimeMillis()) > 600000) {
-                holder.cv.setCardBackgroundColor(getResources().getColor(R.color.backgroundYellow));
-            } else {
-                if ((setAlarm - System.currentTimeMillis()) > 1800000) {
-                    holder.cv.setCardBackgroundColor(getResources().getColor(R.color.backgroundGreen));
+            if (setAlarm != 0) {
+                if ((setAlarm - System.currentTimeMillis()) <= 600000 && (setAlarm - System.currentTimeMillis()) > 0) {
+                    holder.cv.setCardBackgroundColor(getResources().getColor(R.color.backgroundRed));
                 }
-            }
-            Date alarmDate = new Date(setAlarm);
-            SimpleDateFormat alarmDateTime = new SimpleDateFormat("HH:mm dd-MMMM-yyyy");
-            final String alarm_output = alarmDateTime.format(alarmDate);
+                if ((setAlarm - System.currentTimeMillis()) < 1800000 && (setAlarm - System.currentTimeMillis()) > 600000) {
+                    holder.cv.setCardBackgroundColor(getResources().getColor(R.color.backgroundYellow));
+                } else {
+                    if ((setAlarm - System.currentTimeMillis()) > 1800000) {
+                        holder.cv.setCardBackgroundColor(getResources().getColor(R.color.backgroundGreen));
+                    }
+                }
+                Date alarmDate = new Date(setAlarm);
+                SimpleDateFormat alarmDateTime = new SimpleDateFormat("HH:mm dd-MMMM-yyyy");
+                final String alarm_output = alarmDateTime.format(alarmDate);
 
-            holder.alarmCall.setText("Напомнить в " + alarm_output);
+                holder.alarmCall.setText("Напомнить в " + alarm_output);
+            }else{
+                holder.alarmCall.setText("Нет напоминания");
+            }
 
 
         }
